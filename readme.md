@@ -1,4 +1,7 @@
-# JUEGO DE NAVES ESPACIALES
+#   SPACE SHIP
 
-1. Crear bucle principal, refresco de pantalla "version con colores aleatorios"
-2. Crear la clase asteroide, y hacer que aparesca aleatoriamente
+Pasos para la correcta instalación
+
+1. Crear un entorno virtual 
+2. Activar el en torno virtual  
+3. Instalar pygame 
