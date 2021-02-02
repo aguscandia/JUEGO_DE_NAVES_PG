@@ -15,6 +15,13 @@ class nave:
 
         self.image = pg.image.load("recursos/imagenes/nave-75x50.png")
 
+    def actualizar(self):
+        self.y += self.vy
+        if self.y + 50 >= GAME_DIMENSIONS[1]:
+            self.y = GAME_DIMENSIONS[1] - 50
+        if self.y <= 0:
+            self.y = 0
+
 
 
 
@@ -92,17 +99,42 @@ class Game:
         game_over = False
 
         while not game_over:
-            # Control de eventos
+            # Gestión de eventos
             events = pg.event.get()
             self.clock.tick(FPS)
             for event in events:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-        
+                # metodo movimiento de nave 
+                '''
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_UP:
+                        self.nave.y -= 10
+                        if self.nave.y <= 0:
+                            self.nave.y = 0
+
+
+                    if event.key == pg.K_DOWN:
+                        self.nave.y += 10
+                        if self.nave.y + 50 >= GAME_DIMENSIONS[1]:
+                            self.nave.y = GAME_DIMENSIONS[1] - 50
+                '''
+
+        # metodo movimiento de nave con get pressed
+
+            teclas_pulsadas = pg.key.get_pressed()
+            if teclas_pulsadas[pg.K_UP]:
+                self.nave.vy = -10
+            elif teclas_pulsadas[pg.K_DOWN]:
+                self.nave.vy = 10
+            else:
+                self.nave.vy = 0
+
 
             # Zona de Actualización de elementos del juego
 
+            self.nave.actualizar()
             self.asteroide.actualizar()
 
             self.pantalla.fill((11, 44, 94))
