@@ -22,6 +22,16 @@ class nave:
         if self.y <= 0:
             self.y = 0
 
+    def manejar_eventos(self):
+        # metodo movimiento de nave con get pressed
+        teclas_pulsadas = pg.key.get_pressed()
+        if teclas_pulsadas[pg.K_UP]:
+            self.vy = -10
+        elif teclas_pulsadas[pg.K_DOWN]:
+            self.vy = 10
+        else:
+            self.vy = 0
+
 
 
 
@@ -78,6 +88,7 @@ class asteroide:
         
         self.image = self.imagenes[self.image_act]
 
+    
 
     def actualizar(self):
         self.actualizar_posicion()
@@ -106,30 +117,10 @@ class Game:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-                # metodo movimiento de nave 
-                '''
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_UP:
-                        self.nave.y -= 10
-                        if self.nave.y <= 0:
-                            self.nave.y = 0
+
+            self.nave.manejar_eventos()
 
 
-                    if event.key == pg.K_DOWN:
-                        self.nave.y += 10
-                        if self.nave.y + 50 >= GAME_DIMENSIONS[1]:
-                            self.nave.y = GAME_DIMENSIONS[1] - 50
-                '''
-
-        # metodo movimiento de nave con get pressed
-
-            teclas_pulsadas = pg.key.get_pressed()
-            if teclas_pulsadas[pg.K_UP]:
-                self.nave.vy = -10
-            elif teclas_pulsadas[pg.K_DOWN]:
-                self.nave.vy = 10
-            else:
-                self.nave.vy = 0
 
 
             # Zona de Actualización de elementos del juego
