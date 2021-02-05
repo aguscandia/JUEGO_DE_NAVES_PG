@@ -109,14 +109,14 @@ class asteroide():
 
 class Game:
     def __init__(self):
-        self.clock = pg.time.Clock()
+        self.clock = pg.time.Clock()      
         self.pantalla = pg.display.set_mode( GAME_DIMENSIONS )
+        self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
         pg.display.set_caption("Futuro space ship")
         self.asteroide = asteroide( 928, 236, 5, 0)
         self.asteroide2 = asteroide( 928, 116, 4, 0)
         self.asteroide3 = asteroide( 928, 126, 3, 0)
         self.asteroide4 = asteroide( 928, 116, 2, 0)
-
 
         self.aster = []
         for i in range(random.randint(2, 7)):
@@ -125,6 +125,7 @@ class Game:
             self.aster.append(ax3)
         
         self.nave = nave( 10, 275, 0)
+
 
     # bucle principal   
     def bucle_principal(self):        
@@ -139,11 +140,12 @@ class Game:
                     pg.quit()
                     sys.exit()
 
-            self.nave.manejar_eventos()
 
+            self.nave.manejar_eventos()
 
             # Zona de Actualización de elementos del juego
 
+            
 
             self.nave.actualizar()
             self.asteroide.actualizar()
@@ -159,14 +161,13 @@ class Game:
 
             # Zona de pintado de elementos 
             
-            self.pantalla.fill((11, 44, 94))
+            # self.pantalla.fill((11, 44, 94))       
+            self.pantalla.blit(self.bg, (0, 0))
             self.pantalla.blit(self.asteroide.image, (self.asteroide.rect.x, self.asteroide.rect.y))
 
             self.pantalla.blit(self.asteroide2.image, (self.asteroide2.rect.x, self.asteroide2.rect.y))
             self.pantalla.blit(self.asteroide3.image, (self.asteroide3.rect.x, self.asteroide3.rect.y))
             self.pantalla.blit(self.asteroide4.image, (self.asteroide4.rect.x, self.asteroide4.rect.y))
-
-
 
             for aster in self.aster :
                 self.pantalla.blit(aster.image, (aster.x, aster.y))
@@ -175,3 +176,4 @@ class Game:
 
             # Zona de refrescar pantalla
             pg.display.flip()
+
