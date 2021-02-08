@@ -6,6 +6,18 @@ import sys
 
 pg.init()
 
+# fuente
+
+pg.font.init()
+
+def create_font(t,s=72,c=(255,255,0), b=False,i=False):
+    font = pg.font.SysFont("Arial", s, bold=b, italic=i)
+    text = font.render(t, True, c)
+    return text
+
+GAME_OVER_FONT = create_font("GAME OVER")
+SURF = pg.display.set_mode((600, 400))
+
 class Explote(pg.sprite.Sprite): 
     imagenes_files = ['explote100x100_01.png', 'explote100x100_02.png', 'explote100x100_03.png', 'explote100x100_04.png',  'explote100x100_05.png',
                         'explote100x100_06.png',  'explote100x100_07.png', 'explote100x100_08.png', 'explote100x100_09.png', 'explote100x100_10.png',
@@ -52,6 +64,9 @@ class nave:
         self.rect.top = y
         self.rect.left = x
         self.setDimension()
+
+    def getRect(self):
+        return self.rect
 
     def getWidth(self):
         return self.width
@@ -177,6 +192,10 @@ class Game:
         self.pantalla = pg.display.set_mode( GAME_DIMENSIONS )
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
         pg.display.set_caption("Futuro space ship")
+        self.nivel = create_font("nivel: 1", 32, (255, 255, 255)) 
+        self.vidas = create_font("vidas: 3", 32, (255, 255, 255))
+        self.puntos = create_font("puntos: 0", 32, (255, 255, 255))
+
 
         self.asteroide = asteroide( 928, 236, 5, 0)
 
@@ -209,9 +228,7 @@ class Game:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-
-
-                
+ 
 
             self.nave.manejar_eventos()
 
@@ -227,10 +244,10 @@ class Game:
             # self.asteroide3.actualizar()
             # self.asteroide4.actualizar()
 
-            
 
             for aster in self.aster :
                 aster.actualizar()
+
 
             # Zona de pintado de elementos 
             
@@ -244,18 +261,30 @@ class Game:
             # self.pantalla.blit(self.asteroide3.image, (self.asteroide3.rect.x, self.asteroide3.rect.y))
             # self.pantalla.blit(self.asteroide4.image, (self.asteroide4.rect.x, self.asteroide4.rect.y))
 
-            if self.nave.rect.colliderect(self.asteroide.rect):
+            # if self.nave.rect.colliderect(self.asteroide.rect):
+            #     self.explote.setPosition(self.nave.x , self.nave.y - self.nave.getHeight()/2)
+            #     self.mygroup.update()
+            #     self.mygroup.draw(self.pantalla)
+
+            # colision
+            allAsters = []
+            allAsters.append(self.asteroide.rect)
+            for aster in self.aster :
+                allAsters.append(aster.rect)
+                self.pantalla.blit(aster.image, (aster.x, aster.y))
+                pg.draw.rect(self.pantalla,(0, 255, 0), aster.rect)
+
+            if  self.nave.rect.collidelistall(allAsters):
                 self.explote.setPosition(self.nave.x , self.nave.y - self.nave.getHeight()/2)
                 self.mygroup.update()
                 self.mygroup.draw(self.pantalla)
 
-
-            for aster in self.aster :
-                self.pantalla.blit(aster.image, (aster.x, aster.y))
-                pg.draw.rect(self.pantalla,(0, 255, 0), aster.rect)
-
             self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
             pg.draw.rect(self.pantalla,(255, 0, 0), self.nave.rect)
+
+            SURF.blit( self.nivel, (0, 0))  
+            SURF.blit( self.vidas, (120, 0))
+            SURF.blit( self.puntos, (250, 0))
 
             # Zona de refrescar pantalla
             pg.display.flip()
