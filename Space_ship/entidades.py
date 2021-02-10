@@ -17,11 +17,13 @@ def create_font(t, s=72, c=(255,255,0), b=False, i=False):
 GAME_OVER_FONT = create_font("GAME OVER")
 SURF = pg.display.set_mode(GAME_DIMENSIONS)
 
+
 class Nivel:
-    def __init__(self, n):
+    def __init__(self, n, m):
         self.nivel = n
         self.puntos = 0
         self.update_nivel()
+        self.meta_nivel = m
     
     def update_nivel(self):
         self.asteroide = asteroide( 928, 236, 5, 0)
@@ -41,20 +43,21 @@ class Explote(pg.sprite.Sprite):
 
     def __init__(self):
         super(Explote, self).__init__()
+        self.image_act = 0
         self.imagenes = self.cargaImagenes()
-        self.index = 0
-
-        self.image = self.imagenes[self.index]
-
+        self.image = self.imagenes[self.image_act]
         self.rect = pg.Rect(5, 5, 150, 198)
+        self.ciclos_tras_refresco = 0
+        self.retardo_anim = 10
+        
 
     def update(self):
-        self.index += 1
-
-        if self.index >= len(self.imagenes):
-            self.index = 0
-        
-        self.image = self.imagenes[self.index]
+        self.ciclos_tras_refresco += 1
+        if self.ciclos_tras_refresco % self.retardo_anim == 0:
+            self.image_act += 1
+            if self.image_act >= len(self.imagenes):
+                self.image_act = 0       
+        self.image = self.imagenes[self.image_act]
 
 
     def cargaImagenes(self):
@@ -66,6 +69,11 @@ class Explote(pg.sprite.Sprite):
     def setPosition(self, x, y):
         self.rect.top = y
         self.rect.left = x
+
+    def explote_sound(self):
+        pg.mixer.init()
+        pg.mixer.music.load("recursos/audio/sonido-1.mp3")
+        pg.mixer.music.play()
 
 
 class nave:
@@ -162,7 +170,6 @@ class asteroide():
         self.ciclos_tras_refresco = 0  # contador de ciclos para  velocidad de la animacion
         self.imagenes = self.cargaImagenes()
         self.image = self.imagenes[self.image_act] 
-
         self.rect = self.image.get_rect(x=x,y=y)
         # self.circleRadius = pg.Surface.get_rect(self.image)[0]/2
 
@@ -186,12 +193,10 @@ class asteroide():
         # Gestionar imagen activa (disfraz de asteroide)
 
         self.ciclos_tras_refresco += 1
-
         if self.ciclos_tras_refresco % self.retardo_anim == 0:
             self.image_act += 1
             if self.image_act >= len(self.imagenes):
                 self.image_act = 0
-        
         self.image = self.imagenes[self.image_act]
 
 
@@ -209,15 +214,13 @@ class Game:
         self.stop_level = False
         self.finish_level = False
         self.crash_nave = False
-        self.nivel = Nivel(1)
+        self.nivel = Nivel(1, 10)
         self.nivel_cont = 1
         self.vidas = 3
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
         self.asteroide = asteroide( 928, 236, 5, 0)
-        # self.asteroide2 = asteroide( 928, 116, 4, 0)
-        # self.asteroide3 = asteroide( 928, 126, 3, 0)
-        # self.asteroide4 = asteroide( 928, 116, 2, 0)
+        self.planet1 = pg.image.load("recursos/imagenes/planet-450x461.png")
 
         self.aster = []
         for i in range(random.randint(2, 7)):
@@ -270,7 +273,8 @@ class Game:
                     # pintar de rectangulo del asteroide grande
                     # pg.draw.rect(self.pantalla,(0, 255, 0), aster.rect) 
 
-                if  self.nave.rect.collidelistall(allAsters):    
+                if  self.nave.rect.collidelistall(allAsters):
+                    self.explote.explote_sound()    
                     self.stop_level = True
                     self.crash_nave = True
                     allAsters = []
@@ -278,23 +282,36 @@ class Game:
                 # pg.draw.rect(self.pantalla,(255, 0, 0), self.goalRect) # control de puntos
                 if  self.goalRect.collidelistall(allAsters):
                     self.puntos += 1
-
+                if self.puntos > self.nivel.meta_nivel:
+                    self.stop_level = True
+                    self.finish_level = True
         
             if self.stop_level:
-                if self.crash_nave:                   
+                if self.crash_nave:                  
                     SURF.blit( create_font("Perdiste", 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 2) ,(GAME_DIMENSIONS)[1] / 2))
                     contador += 1
-                    if contador < 500:
-                        self.explote.setPosition(self.nave.x , self.nave.y - self.nave.getHeight()/2)
-                        self.mygroup.update()
-                        self.mygroup.draw(self.pantalla)
+                    if contador < len(self.explote.imagenes) * self.explote.retardo_anim:
+                        self.pantalla.blit(self.bg, (0, 0))
+                        self.pantalla.blit((self.explote.image), (self.nave.x, self.nave.y - self.nave.getHeight()/ 2))
+                        self.explote.update()
                     if contador > 500:
                         self.vidas -= 1
                         contador = 0
                         self.nivel.update_nivel()
                         self.stop_level = False
                         self.crash_nave = False
-                # elif finish_level:
+                elif self.finish_level:
+                    self.pantalla.blit(self.bg, (0, 0))
+                    self.pantalla.blit(self.planet1, ((GAME_DIMENSIONS[0] - pg.Surface.get_width(self.planet1) / 2 ), (0 + (GAME_DIMENSIONS[1] - pg.Surface.get_height(self.planet1)) / 2 ) ))
+                    # • Aparecerá un planeta por la parte derecha de la pantalla.
+                    # • Dejarán de aparecer obstáculos pero los que estén en pantalla deberán continuar su movimiento hasta
+                    # el borde derecho o chocar con la nave.
+                    # • La nave girará 180 grados y aterrizará sobre el planeta de forma automática
+                    # • Aparecerá un cartel que indique "Pulse <tecla elegida por el programador> para continuar"
+                    # • Si fuera el último nivel el cartel sería de felicitación e indicaría acción para reiniciar el juego.
+                    # • Si el jugador no iniciara la partida transcurrido un tiempo, se volverá a la portada.
+
+
             
             SURF.blit( create_font("Nivel:" + str(self.nivel_cont), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 0, 0))
             SURF.blit( create_font("Vidas:" + str(self.vidas), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 2, 0))
