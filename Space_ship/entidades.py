@@ -20,26 +20,48 @@ SURF = pg.display.set_mode(GAME_DIMENSIONS)
 
 class Nivel:
     def __init__(self, n, m):
+        self.bigAsters = []
+        self.aster = []
         self.nivel = n
         self.puntos = 0
         self.update_nivel()
         self.meta_nivel = m
+        self.finalizando = False
     
     def update_nivel(self):
-        self.asteroide = asteroide( 928, 236, 5, 0)
-        self.aster = []
         for i in range(random.randint(2, 7)):
             ax3 = Asteroidex3()
             ax3.vx = random.randint(2, 15)
             self.aster.append(ax3)
-        
+
+        # for i in range(random.randint(2, 7)):
+        for i in range(1):
+            ax3 = asteroide()
+            #   ax3.vx = random.randint(2, 15)
+            self.bigAsters.append(ax3)
+
+    def actualizarBigAsters(self):
+        for bigAster in self.bigAsters:
+            bigAster.actualizar(self.finalizando)
+
+    def actualizarAsters(self):
+        for aster in self.aster:
+            aster.actualizar(self.finalizando)
+
+    def tieneAsteroides(self):
+        totalAsteroides = []
+        for bigAster in self.bigAsters:
+                totalAsteroides.append(bigAster.rect.x < 0)
+        for aster in self.aster:
+                totalAsteroides.append(aster.x < 0)
+        return not all(totalAsteroides)
 
 
-class Explote(pg.sprite.Sprite): 
+class Explote(pg.sprite.Sprite):
     imagenes_files = ['explote100x100_01.png', 'explote100x100_02.png', 'explote100x100_03.png', 'explote100x100_04.png',  'explote100x100_05.png',
-                        'explote100x100_06.png',  'explote100x100_07.png', 'explote100x100_08.png', 'explote100x100_09.png', 'explote100x100_10.png',
-                        'explote100x100_11.png',  'explote100x100_12.png', 'explote100x100_13.png', 'explote100x100_14.png', 'explote100x100_15.png',
-                        'explote100x100_16.png',  'explote100x100_18.png', 'explote100x100_19.png', 'explote100x100_20.png']
+                      'explote100x100_06.png',  'explote100x100_07.png', 'explote100x100_08.png', 'explote100x100_09.png', 'explote100x100_10.png',
+                      'explote100x100_11.png',  'explote100x100_12.png', 'explote100x100_13.png', 'explote100x100_14.png', 'explote100x100_15.png',
+                      'explote100x100_16.png',  'explote100x100_18.png', 'explote100x100_19.png', 'explote100x100_20.png']
 
     def __init__(self):
         super(Explote, self).__init__()
@@ -48,7 +70,7 @@ class Explote(pg.sprite.Sprite):
         self.image = self.imagenes[self.image_act]
         self.rect = pg.Rect(5, 5, 150, 198)
         self.ciclos_tras_refresco = 0
-        self.retardo_anim = 10
+        self.retardo_anim = 5
         
 
     def update(self):
@@ -138,10 +160,10 @@ class Asteroidex3():
 
 
 
-    def actualizar(self):
+    def actualizar(self, finalizando):
         self.x -= self.vx
         self.rect.x -= self.vx
-        if self.x <= -50:
+        if self.x <= -50 and not finalizando:
             self.x = 850
             self.rect.x = 850
             self.y = random.randint(0, 550)
@@ -161,16 +183,16 @@ class asteroide():
 
     retardo_anim = 5  # mientras mas aumenta en valor mas lenta es la animacion
 
-    def __init__(self, x, y, vx, vy):
-        self.x = x
-        self.y = y
-        self.vx = vx
-        self.vy = vy
+    def __init__(self):
+        self.x = 928
+        self.y = random.randint(2, 15)
+        self.vx = 5
+        self.vy = 0
         self.image_act = 0     # contador inicializado en 0
         self.ciclos_tras_refresco = 0  # contador de ciclos para  velocidad de la animacion
         self.imagenes = self.cargaImagenes()
         self.image = self.imagenes[self.image_act] 
-        self.rect = self.image.get_rect(x=x,y=y)
+        self.rect = self.image.get_rect(x = self.x, y = self.y)
         # self.circleRadius = pg.Surface.get_rect(self.image)[0]/2
 
     def cargaImagenes(self):
@@ -179,11 +201,11 @@ class asteroide():
             lista_imagenes.append(pg.image.load(f"recursos/imagenes/{img}"))
         return lista_imagenes
 
-    def actualizar_posicion(self):
+    def actualizar_posicion(self, finalizando):
 
         # Gestionar posicion del asteroide
 
-        if self.rect.x <= -128:
+        if self.rect.x <= -128 and not finalizando:
             self.rect.x = 928
             self.rect.y = random.randint(0, 472)
         self.rect.x -= self.vx
@@ -200,8 +222,8 @@ class asteroide():
         self.image = self.imagenes[self.image_act]
 
 
-    def actualizar(self):
-        self.actualizar_posicion()
+    def actualizar(self, finalizando):
+        self.actualizar_posicion(finalizando)
         self.actualizar_imagen()
 
 
@@ -219,26 +241,13 @@ class Game:
         self.vidas = 3
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
-        self.asteroide = asteroide( 928, 236, 5, 0)
         self.planet1 = pg.image.load("recursos/imagenes/planet-450x461.png")
-
-        self.aster = []
-        for i in range(random.randint(2, 7)):
-        # for i in range (2):
-            ax3 = Asteroidex3()
-            ax3.vx = random.randint(2, 15)
-            self.aster.append(ax3)
-        
         self.nave = nave( 10, 275, 0)
-
         self.explote = Explote()
-        self.mygroup = pg.sprite.Group(self.explote)
-
 
     # bucle principal   
-    def bucle_principal(self):        
+    def bucle_principal(self):
         game_over = False
-        stop_level = False
         contador = 0
 
         while not game_over:
@@ -252,39 +261,46 @@ class Game:
 
             if not self.stop_level:
                 self.nave.manejar_eventos()
-                # Zona de Actualización de elementos del juego       
-                self.nave.actualizar()
-                self.nivel.asteroide.actualizar()
 
-                for aster in self.nivel.aster :
-                    aster.actualizar()
+                # Zona de Actualización de elementos del juego
+
+                self.nave.actualizar()
+
+                self.nivel.actualizarAsters()
+                self.nivel.actualizarBigAsters()
+
+
+
                 # Zona de pintado de elementos 
                 
                 # self.pantalla.fill((11, 44, 94))       
                 self.pantalla.blit(self.bg, (0, 0))
-                self.pantalla.blit(self.nivel.asteroide.image, (self.nivel.asteroide.rect.x, self.nivel.asteroide.rect.y))
 
                 # colision
                 allAsters = []
-                allAsters.append(self.nivel.asteroide.rect)
-                for aster in self.nivel.aster :
+                for aster in self.nivel.aster:
                     allAsters.append(aster.rect)
                     self.pantalla.blit(aster.image, (aster.x, aster.y))
-                    # pintar de rectangulo del asteroide grande
-                    # pg.draw.rect(self.pantalla,(0, 255, 0), aster.rect) 
+                for bigAster in self.nivel.bigAsters:
+                    allAsters.append(bigAster.rect)
+                    self.pantalla.blit(bigAster.image, (bigAster.rect.x, bigAster.rect.y))
 
-                if  self.nave.rect.collidelistall(allAsters):
+                if self.nave.rect.collidelistall(allAsters):
                     self.explote.explote_sound()    
                     self.stop_level = True
                     self.crash_nave = True
                     allAsters = []
                 self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
                 # pg.draw.rect(self.pantalla,(255, 0, 0), self.goalRect) # control de puntos
-                if  self.goalRect.collidelistall(allAsters):
-                    self.puntos += 1
+                if self.goalRect.collidelistall(allAsters):
+                   self.puntos += 1
+
                 if self.puntos > self.nivel.meta_nivel:
+                    self.finalizando = True
+                if self.puntos > self.nivel.meta_nivel and not self.nivel.tieneAsteroides():
                     self.stop_level = True
                     self.finish_level = True
+
         
             if self.stop_level:
                 if self.crash_nave:                  
