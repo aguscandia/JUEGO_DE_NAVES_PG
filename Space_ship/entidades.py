@@ -110,8 +110,9 @@ class Explote(pg.sprite.Sprite):
 class nave:
 
     def __init__(self, x, y, vy):
+        self.angle = 0
         self.rotacion = 0
-        self.vc = 10   # velocidad crucero
+        self.vc = 5   # velocidad crucero
         self.x = x
         self.y = y
         self.vy = vy
@@ -147,18 +148,30 @@ class nave:
     def naveAterrizando(self):
         # si la nave esta por abajo de la mitad de la pantalla tiene que acelerar hacia arriba
         # si la nave esta por arriba de la mitad de la pantalla tiene que acelerar hacia abajo
-        # si la nave esta esta en el centro no tiene que acelerar ni para arriba ni para abajo tiene que acelerar en x
+        # si la nave esta en el centro y la nave no este en el final de la pantalla tiene que acelerar en x
         # si la nave esta al final de la pantalla menos su ancho girar 180° y no aterrizar mas.
         if self.y < GAME_DIMENSIONS[1] / 2:
             self.y += self.vc
         if self.y > GAME_DIMENSIONS[1] / 2:
             self.y -= self.vc
-        if self.y == GAME_DIMENSIONS[1] / 2:
+        if self.y == GAME_DIMENSIONS[1] / 2 and not self.x == GAME_DIMENSIONS[0] - self.width:
             self.x += self.vc
-        if self.x == GAME_DIMENSIONS[0] - self.width:
-            self.rotacion -= 2 % 360
-            self.image = pg.transform.rotate(self.image, self.rotacion)
+        if self.x == GAME_DIMENSIONS[0] - self.width and self.angle < 10:
+            #self.rotacion -= 2 % 180
+            self.angle += 1 % 180
+            self.x, self.y = self.image.get_rect().center  # Save its current center.
+            self.rect = self.image.get_rect()  # Replace old rect with new rect.
+            self.rect.center = (self.x, self.y)
+            self.image = pg.transform.rotate(self.image, self.angle)
+            #self.image = self.rot_center(self.image, 1 % 360)
 
+    def rot_center(self, image, angle):
+        orig_rect = image.get_rect()
+        rot_image = pg.transform.rotate(image, angle)
+        rot_rect = orig_rect.copy()
+        rot_rect.center = rot_image.get_rect().center
+        rot_image = rot_image.subsurface(rot_rect).copy()
+        return rot_image
 
 
     def manejar_eventos(self):
@@ -346,7 +359,7 @@ class Game:
                 elif self.finish_level:
                     self.pantalla.blit(self.bg, (0, 0))
                     self.pantalla.blit(self.planet1, ((GAME_DIMENSIONS[0] - pg.Surface.get_width(self.planet1) / 2),
-                                                      (0 + (GAME_DIMENSIONS[1] - pg.Surface.get_height(self.planet1)) / 2)))
+                                      (0 + (GAME_DIMENSIONS[1] - pg.Surface.get_height(self.planet1)) / 2)))
                     self.nave.naveAterrizando()
                     self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
 
