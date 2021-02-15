@@ -19,6 +19,20 @@ def create_font(t, s=72, c=(255, 255, 0), b=False, i=False):
 GAME_OVER_FONT = create_font("GAME OVER")
 SURF = pg.display.set_mode(GAME_DIMENSIONS)
 
+class Planet:
+    def __init__(self):
+        self.image = pg.image.load("recursos/imagenes/planet-450x461.png")
+        self.x = GAME_DIMENSIONS[0]
+        self.y = (GAME_DIMENSIONS[1] - pg.Surface.get_height(self.image)) / 2
+
+    def move(self, x, y):
+        self.x += x
+        self.y += y
+
+    def getWidth(self):
+        return pg.Surface.get_width(self.image)
+
+
 
 class Nivel:
     def __init__(self, n, m):
@@ -111,7 +125,6 @@ class nave:
 
     def __init__(self, x, y, vy):
         self.angle = 0
-        self.rotacion = 0
         self.vc = 5   # velocidad crucero
         self.x = x
         self.y = y
@@ -121,6 +134,8 @@ class nave:
         self.rect.top = y
         self.rect.left = x
         self.setDimension()
+        self.printPos = (0, 0)
+        self.printImage = self.image
 
     def getRect(self):
         return self.rect
@@ -144,6 +159,18 @@ class nave:
         if self.y <= 0:
             self.y = 0
             self.rect.top = 0
+        self.printPos = (self.x, self.y)
+        self.printImage = self.image
+        if self.angle != 0:
+            # Antes de hacer la transformación (rotación) me guardo las coordenadas del centro de mi nave original
+            centro_naveX = self.rect.centerx
+            centro_naveY = self.rect.centery
+            # Roto la nave el angulo angulo y la guardo en una nueva surface (nave_rotadaS)
+            nave_rotadaS = pg.transform.rotozoom(self.image, self.angle, 1)
+            # Obtengo el rectángulo de mi nueva surface CENTRADO EN LA POSICION GUARDADA ANTES
+            rectanguloRot = nave_rotadaS.get_rect(centerx=centro_naveX, centery=centro_naveY)
+            self.printPos = rectanguloRot
+            self.printImage = nave_rotadaS
 
     def naveAterrizando(self):
         # si la nave esta por abajo de la mitad de la pantalla tiene que acelerar hacia arriba
@@ -152,27 +179,15 @@ class nave:
         # si la nave esta al final de la pantalla menos su ancho girar 180° y no aterrizar mas.
         if self.y < GAME_DIMENSIONS[1] / 2:
             self.y += self.vc
+            self.rect.top += self.vc
         if self.y > GAME_DIMENSIONS[1] / 2:
             self.y -= self.vc
+            self.rect.top -= self.vc
         if self.y == GAME_DIMENSIONS[1] / 2 and not self.x == GAME_DIMENSIONS[0] - self.width:
             self.x += self.vc
-        if self.x == GAME_DIMENSIONS[0] - self.width and self.angle < 10:
-            #self.rotacion -= 2 % 180
-            self.angle += 1 % 180
-            self.x, self.y = self.image.get_rect().center  # Save its current center.
-            self.rect = self.image.get_rect()  # Replace old rect with new rect.
-            self.rect.center = (self.x, self.y)
-            self.image = pg.transform.rotate(self.image, self.angle)
-            #self.image = self.rot_center(self.image, 1 % 360)
-
-    def rot_center(self, image, angle):
-        orig_rect = image.get_rect()
-        rot_image = pg.transform.rotate(image, angle)
-        rot_rect = orig_rect.copy()
-        rot_rect.center = rot_image.get_rect().center
-        rot_image = rot_image.subsurface(rot_rect).copy()
-        return rot_image
-
+            self.rect.left += self.vc
+        if self.x == GAME_DIMENSIONS[0] - self.width and self.angle < 180: # hasta que siga girando vaya aumentando de a 1
+            self.angle += 1
 
     def manejar_eventos(self):
         # metodo movimiento de nave con get pressed
@@ -269,6 +284,9 @@ class asteroide():
 
 class Game:
     def __init__(self):
+        self.puntosAcumulados = 0
+        self.ending_level = False
+        self.planet1 = Planet()
         self.clock = pg.time.Clock()
         self.pantalla = pg.display.set_mode(GAME_DIMENSIONS)
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
@@ -277,11 +295,10 @@ class Game:
         self.finish_level = False
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
-        self.nivel_cont = 1
         self.vidas = 3
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
-        self.planet1 = pg.image.load("recursos/imagenes/planet-450x461.png")
+
         self.nave = nave(10, 275, 0)
         self.explote = Explote()
 
@@ -338,7 +355,7 @@ class Game:
                     self.nivel.finalizando = True
                 if self.puntos > self.nivel.meta_nivel and not self.nivel.tieneAsteroides():
                     self.stop_level = True
-                    self.finish_level = True
+                    self.ending_level = True
 
             if self.stop_level:
                 if self.crash_nave:
@@ -349,31 +366,53 @@ class Game:
                         self.pantalla.blit(self.bg, (0, 0))
                         self.pantalla.blit((self.explote.image), (self.nave.x, self.nave.y - self.nave.getHeight() / 2))
                         self.explote.update()
-                    if contador > 500:
+                    if contador > 200:
                         self.vidas -= 1
                         contador = 0
                         self.nivel.restart()
                         self.stop_level = False
                         self.crash_nave = False
                         self.nivel.finalizando = False
-                elif self.finish_level:
+                elif self.ending_level:
                     self.pantalla.blit(self.bg, (0, 0))
-                    self.pantalla.blit(self.planet1, ((GAME_DIMENSIONS[0] - pg.Surface.get_width(self.planet1) / 2),
-                                      (0 + (GAME_DIMENSIONS[1] - pg.Surface.get_height(self.planet1)) / 2)))
+
+                    while self.planet1.x != (GAME_DIMENSIONS[0] - self.planet1.getWidth() / 2):
+                        self.planet1.move(-0.25, 0)
+                        self.pantalla.blit(self.bg, (0, 0))
+                        self.pantalla.blit(self.planet1.image, (self.planet1.x, self.planet1.y))
+                        self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
+                        pg.display.flip()
                     self.nave.naveAterrizando()
-                    self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
+                    self.nave.actualizar()
+                    self.pantalla.blit(self.planet1.image, (self.planet1.x, self.planet1.y))
+                    self.pantalla.blit(self.nave.printImage, self.nave.printPos)
+                    if self.nave.angle == 180:
+                        self.finish_level = True
+                        self.ending_level = False
+                elif self.finish_level:
+                    SURF.blit(create_font(" Nivel " + str(self.nivel.nivel) + " Completado Pulse Enter para continuar ", 32, (255, 255, 255)),
+                              ((GAME_DIMENSIONS[0] / 2) - 300, (GAME_DIMENSIONS)[1] / 2))
+                    tecla_pulsada = pg.key.get_pressed()
+                    if tecla_pulsada == [pg.K_KP_ENTER]:
+                        self.puntosAcumulados += self.nivel.puntos
+                        self.nivel = Nivel(self.nivel.nivel + 1, 30)
+                        self.finish_level = False
+                        self.stop_level = False
+                        self.nave = nave(10, 275, 0)
 
 
-
-                    # • Aparecerá un planeta por la parte derecha de la pantalla cuando termine el nivel.
-                    # • Dejarán de aparecer obstáculos pero los que estén en pantalla deberán continuar su movimiento hasta
-                    # el borde derecho o chocar con la nave.
-                    # • La nave girará 180 grados y aterrizará sobre el planeta de forma automática
-                    # • Aparecerá un cartel que indique "Pulse <tecla elegida por el programador> para continuar"
+                    #  centrar el texto,
+                    #  cambiar meta de puntos por tiempo
+                    # pasarle a nivel sus estados
                     # • Si fuera el último nivel el cartel sería de felicitación e indicaría acción para reiniciar el juego.
+                    # pantalla inicio portada
                     # • Si el jugador no iniciara la partida transcurrido un tiempo, se volverá a la portada.
 
-            SURF.blit(create_font("Nivel:" + str(self.nivel_cont), 32, (255, 255, 255)),
+                    # game over
+                    # tablas de puntaje
+
+
+            SURF.blit(create_font("Nivel:" + str(self.nivel.nivel), 32, (255, 255, 255)),
                       ((GAME_DIMENSIONS[0] / 6) * 0, 0))
             SURF.blit(create_font("Vidas:" + str(self.vidas), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 2, 0))
             SURF.blit(create_font("Puntos:" + str(self.puntos), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 4, 0))
