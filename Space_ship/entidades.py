@@ -36,6 +36,9 @@ class Planet:
 
 class Nivel:
     def __init__(self, n, m):
+        self.stop_level = False
+        self.ending_level = False
+        self.finish_level = False
         self.bigAsters = []
         self.aster = []
         self.nivel = n
@@ -76,6 +79,9 @@ class Nivel:
         self.bigAsters = []
         self.aster = []
         self.update_nivel()
+
+    def get_numeroNivel(self):
+        return self.nivel
 
 
 class Explote(pg.sprite.Sprite):
@@ -284,25 +290,23 @@ class asteroide():
 
 class Game:
     def __init__(self):
+        self.timeLeft = 0
+        self.numeroDeNiveles = 1
         self.puntosAcumulados = 0
-        self.ending_level = False
         self.planet1 = Planet()
         self.clock = pg.time.Clock()
         self.pantalla = pg.display.set_mode(GAME_DIMENSIONS)
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
         pg.display.set_caption("Futuro space ship")
-        self.stop_level = False
-        self.finish_level = False
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
         self.vidas = 3
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
-
         self.nave = nave(10, 275, 0)
         self.explote = Explote()
 
-    # bucle principal   
+    # bucle principal
     def bucle_principal(self):
         game_over = False
         contador = 0
@@ -317,7 +321,7 @@ class Game:
                     pg.quit()
                     sys.exit()
 
-            if not self.stop_level:
+            if not self.nivel.stop_level:
                 self.nave.manejar_eventos()
 
                 # Zona de Actualización de elementos del juego
@@ -343,7 +347,7 @@ class Game:
 
                 if self.nave.rect.collidelistall(allAsters):
                     self.explote.explote_sound()
-                    self.stop_level = True
+                    self.nivel.stop_level = True
                     self.crash_nave = True
                     allAsters = []
                 self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
@@ -354,26 +358,27 @@ class Game:
                 if self.puntos > self.nivel.meta_nivel:
                     self.nivel.finalizando = True
                 if self.puntos > self.nivel.meta_nivel and not self.nivel.tieneAsteroides():
-                    self.stop_level = True
-                    self.ending_level = True
+                    self.nivel.stop_level = True
+                    self.nivel.ending_level = True
+                    self.nave.vy = 0
 
-            if self.stop_level:
+            if self.nivel.stop_level:
                 if self.crash_nave:
-                    SURF.blit(create_font("Perdiste", 32, (255, 255, 255)),
-                              ((GAME_DIMENSIONS[0] / 2), (GAME_DIMENSIONS)[1] / 2))
+                    textoVidas = create_font("No Te Rindas!, Inténtalo De Nuevo", 32, (255, 255, 255))
+                    SURF.blit(textoVidas, ((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                     contador += 1
                     if contador < len(self.explote.imagenes) * self.explote.retardo_anim:
                         self.pantalla.blit(self.bg, (0, 0))
-                        self.pantalla.blit((self.explote.image), (self.nave.x, self.nave.y - self.nave.getHeight() / 2))
+                        self.pantalla.blit(self.explote.image, (self.nave.x, self.nave.y - self.nave.getHeight() / 2))
                         self.explote.update()
                     if contador > 200:
                         self.vidas -= 1
                         contador = 0
                         self.nivel.restart()
-                        self.stop_level = False
+                        self.nivel.stop_level = False
                         self.crash_nave = False
                         self.nivel.finalizando = False
-                elif self.ending_level:
+                elif self.nivel.ending_level:
                     self.pantalla.blit(self.bg, (0, 0))
 
                     while self.planet1.x != (GAME_DIMENSIONS[0] - self.planet1.getWidth() / 2):
@@ -387,35 +392,70 @@ class Game:
                     self.pantalla.blit(self.planet1.image, (self.planet1.x, self.planet1.y))
                     self.pantalla.blit(self.nave.printImage, self.nave.printPos)
                     if self.nave.angle == 180:
-                        self.finish_level = True
-                        self.ending_level = False
-                elif self.finish_level:
-                    SURF.blit(create_font(" Nivel " + str(self.nivel.nivel) + " Completado Pulse Enter para continuar ", 32, (255, 255, 255)),
-                              ((GAME_DIMENSIONS[0] / 2) - 300, (GAME_DIMENSIONS)[1] / 2))
-                    tecla_pulsada = pg.key.get_pressed()
-                    if tecla_pulsada == [pg.K_KP_ENTER]:
-                        self.puntosAcumulados += self.nivel.puntos
-                        self.nivel = Nivel(self.nivel.nivel + 1, 30)
-                        self.finish_level = False
-                        self.stop_level = False
-                        self.nave = nave(10, 275, 0)
+                        self.nivel.finish_level = True
+                        self.nivel.ending_level = False
+                        self.timeLeft = pg.time.get_ticks() # siempre va a ir en aumento el tiempo actual
+                elif self.nivel.finish_level:
 
+                    if self.nivel.get_numeroNivel() >= self.numeroDeNiveles:
+                        textLevelComplete = create_font(" Juego Completado!, Pulse Enter ", 32, (255, 255, 255))
+                        SURF.blit(textLevelComplete,((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
 
-                    #  centrar el texto,
-                    #  cambiar meta de puntos por tiempo
-                    # pasarle a nivel sus estados
-                    # • Si fuera el último nivel el cartel sería de felicitación e indicaría acción para reiniciar el juego.
-                    # pantalla inicio portada
-                    # • Si el jugador no iniciara la partida transcurrido un tiempo, se volverá a la portada.
+                        tecla_pulsada = pg.key.get_pressed()
+                        if tecla_pulsada[pg.K_RETURN]:
+                            self.puntosAcumulados = 0
+                            self.puntos = 0
+                            self.vidas = 3
+                            self.nivel = Nivel(1, 30)
+                            self.nave = nave(10, 275, 0)
 
+                        if ((pg.time.get_ticks() - self.timeLeft) / 1000) > 5:
+                            self.irAlaPortada()
+
+                    else:
+                        textLevelComplete = create_font(" Nivel " + str(self.nivel.nivel) + " Completado! Pulse Enter para continuar ",32, (255, 255, 255))
+                        SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+
+                        tecla_pulsada = pg.key.get_pressed()
+                        if tecla_pulsada[pg.K_RETURN]:
+                            self.puntosAcumulados = self.nivel.puntos
+                            self.nivel = Nivel(self.nivel.get_numeroNivel() + 1, 30)
+                            self.nave = nave(10, 275, 0)
+
+                    # cambiar meta de puntos por tiempo
                     # game over
                     # tablas de puntaje
 
 
-            SURF.blit(create_font("Nivel:" + str(self.nivel.nivel), 32, (255, 255, 255)),
-                      ((GAME_DIMENSIONS[0] / 6) * 0, 0))
+            SURF.blit(create_font("Nivel:" + str(self.nivel.nivel), 32, (255, 255, 255)),((GAME_DIMENSIONS[0] / 6) * 0, 0))
             SURF.blit(create_font("Vidas:" + str(self.vidas), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 2, 0))
             SURF.blit(create_font("Puntos:" + str(self.puntos), 32, (255, 255, 255)), ((GAME_DIMENSIONS[0] / 6) * 4, 0))
 
             # Zona de refrescar pantalla
             pg.display.flip()
+
+    def irAlaPortada(self):
+        portada = True
+        while portada:
+            events = pg.event.get()
+            for event in events:
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+            # self.pantalla.blit(self.bg, (0, 0))
+            self.pantalla.fill((11, 44, 94))
+            textPortada = create_font(" Pulse Enter para continuar ", 32, (255, 255, 255))
+            SURF.blit(textPortada, ((GAME_DIMENSIONS[0] - textPortada.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+
+            tecla_pulsada = pg.key.get_pressed()
+            if tecla_pulsada[pg.K_RETURN]:
+                self.puntosAcumulados = 0
+                self.puntos = 0
+                self.vidas = 3
+                self.nivel = Nivel(1, 30)
+                self.nave = nave(10, 275, 0)
+                portada = False
+
+            pg.display.flip()
+
+
