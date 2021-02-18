@@ -125,7 +125,7 @@ class Explote(pg.sprite.Sprite):
         pg.mixer.init()
         pg.mixer.music.load("recursos/audio/sonido-1.mp3")
         pg.mixer.music.play()
-        pg.mixer.music.set_volume(0.1)
+        pg.mixer.music.set_volume(0.01)
 
 class nave:
 
@@ -297,10 +297,11 @@ class Game:
         self.clock = pg.time.Clock()
         self.pantalla = pg.display.set_mode(GAME_DIMENSIONS)
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
+        self.bg2 = pg.image.load("recursos/imagenes/Portada-2.jpg")
         pg.display.set_caption("Futuro space ship")
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
-        self.vidas = 3
+        self.vidas = 1
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
         self.nave = nave(10, 275, 0)
@@ -364,8 +365,6 @@ class Game:
 
             if self.nivel.stop_level:
                 if self.crash_nave:
-                    textoVidas = create_font("No Te Rindas!, Inténtalo De Nuevo", 32, (255, 255, 255))
-                    SURF.blit(textoVidas, ((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                     contador += 1
                     if contador < len(self.explote.imagenes) * self.explote.retardo_anim:
                         self.pantalla.blit(self.bg, (0, 0))
@@ -374,6 +373,22 @@ class Game:
                     if contador > 200:
                         self.vidas -= 1
                         contador = 0
+                        timeLeft = pg.time.get_ticks()
+                        if self.vidas > 0:
+                            while ((pg.time.get_ticks() - timeLeft) / 1000) > 5:
+                                self.pantalla.blit(self.bg, (0, 0))
+                                textoVidas = create_font("No Te Rindas!, Inténtalo De Nuevo", 32, (255, 255, 255))
+                                SURF.blit(textoVidas,((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+                                pg.display.flip()
+                        else:
+                            while ((pg.time.get_ticks() - timeLeft) / 1000) > 5:
+                                self.pantalla.blit(self.bg, (0, 0))
+                                textoVidas = create_font("Game Over", 32, (255, 255, 255))
+                                SURF.blit(textoVidas,((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+                                pg.display.flip()
+                            self.irAlaPortada()
+
+
                         self.nivel.restart()
                         self.nivel.stop_level = False
                         self.crash_nave = False
@@ -423,6 +438,7 @@ class Game:
                             self.nave = nave(10, 275, 0)
 
                     # cambiar meta de puntos por tiempo
+
                     # game over
                     # tablas de puntaje
 
@@ -436,25 +452,70 @@ class Game:
 
     def irAlaPortada(self):
         portada = True
+        pg.mixer.init()
+        pg.mixer.music.load("recursos/audio/intro_.mp3")
+        pg.mixer.music.play()
+        pg.mixer.music.set_volume(0.05)
+        SPACEHEIGHT = 80  # indice para los espacios de texto
+        textPortada_s = 2
+        textInstrucciones_s = 1
         while portada:
             events = pg.event.get()
             for event in events:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-            # self.pantalla.blit(self.bg, (0, 0))
-            self.pantalla.fill((11, 44, 94))
-            textPortada = create_font(" Pulse Enter para continuar ", 32, (255, 255, 255))
-            SURF.blit(textPortada, ((GAME_DIMENSIONS[0] - textPortada.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+
+            self.pantalla.blit(self.bg2, (0, 0))
+            #self.pantalla.fill((11, 44, 94))
+
+            textTitulo = create_font(" SPACE SHIP ", 100, (255, 255, 255))
+            SURF.blit(textTitulo, ((GAME_DIMENSIONS[0] - textTitulo.get_width()) / 2, GAME_DIMENSIONS[1] / 4))
+            textPortada = create_font(" Jugar ", textPortada_s * 16, (255, 255, 255))
+            SURF.blit(textPortada, ((GAME_DIMENSIONS[0] - textPortada.get_width()) / 2, textTitulo.get_rect().centery + SPACEHEIGHT * 3))
+            textInstrucciones = create_font(" Instrucciones ", textInstrucciones_s * 16, (255, 255, 255))
+            SURF.blit(textInstrucciones, ((GAME_DIMENSIONS[0] - textInstrucciones.get_width()) / 2, textTitulo.get_rect().centery + SPACEHEIGHT * 3.5))
 
             tecla_pulsada = pg.key.get_pressed()
             if tecla_pulsada[pg.K_RETURN]:
-                self.puntosAcumulados = 0
-                self.puntos = 0
-                self.vidas = 3
-                self.nivel = Nivel(1, 30)
-                self.nave = nave(10, 275, 0)
-                portada = False
+                if textPortada_s > textInstrucciones_s:
+                    self.puntosAcumulados = 0
+                    self.puntos = 0
+                    self.vidas = 2
+                    self.nivel = Nivel(1, 30)
+                    self.nave = nave(10, 275, 0)
+                    portada = False
+                    pg.mixer.music.stop()
+                else:
+                    self.irAlasInstrucciones()
+            elif tecla_pulsada[pg.K_DOWN]:
+                textPortada_s = 1
+                textInstrucciones_s = 2
+            elif tecla_pulsada[pg.K_UP]:
+                textPortada_s = 2
+                textInstrucciones_s = 1
+
+            pg.display.flip()
+
+    def irAlasInstrucciones(self):
+        instrucciones= True
+        SPACEHEIGHT = 80  # indice para los espacios de texto
+        while instrucciones:
+            events = pg.event.get()
+            for event in events:
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+
+            #self.pantalla.blit(self.bg2, (0, 0))
+            self.pantalla.fill((11, 44, 94))
+
+            textTitulo = create_font(" Instrucciones ", 50, (255, 255, 255))
+            SURF.blit(textTitulo, ((GAME_DIMENSIONS[0] - textTitulo.get_width()) / 2, GAME_DIMENSIONS[1] / 4))
+
+            tecla_pulsada = pg.key.get_pressed()
+            if tecla_pulsada[pg.K_ESCAPE]:
+                instrucciones = False
 
             pg.display.flip()
 
