@@ -1,10 +1,11 @@
 import pygame as pg
-from Space_ship import GAME_DIMENSIONS, FPS
+from Space_ship import GAME_DIMENSIONS, gameDB, FPS
 
 import random
 import sys
-
 pg.init()
+
+db = gameDB.GameDB('mysqlite.db')
 
 # fuente
 pg.font.init()
@@ -411,11 +412,18 @@ class Game:
                         self.nivel.finish_level = True
                         self.nivel.ending_level = False
                         self.timeLeft = pg.time.get_ticks() # siempre va a ir en aumento el tiempo actual
+                        # meta del Juego completado
+
                 elif self.nivel.finish_level:
 
                     if self.nivel.get_numeroNivel() >= self.numeroDeNiveles:
-                        textLevelComplete = create_font(" Juego Completado!, Pulse Enter ", 32, (255, 255, 255))
-                        SURF.blit(textLevelComplete,((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+                        while ((pg.time.get_ticks() - self.timeLeft) / 1000) < 2:
+                            self.pantalla.blit(self.bg, (0, 0))
+                            textLevelComplete = create_font(" Juego Completado! ", 32, (255, 255, 255))
+                            SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
+                            pg.display.flip()
+                          # ingreso del nombre
+                        self.enter_name()
 
                         tecla_pulsada = pg.key.get_pressed()
                         if tecla_pulsada[pg.K_RETURN]:
@@ -534,4 +542,31 @@ class Game:
 
             pg.display.flip()
 
+    def enter_name(self):
+        enter_name = True
+        SPACEHEIGHT = 80  # indice para los espacios de texto
+        name = ''
+        while enter_name:
+            events = pg.event.get()
+            for event in events:
+                if event.type == pg.KEYDOWN:
+                    print(pg.key.name(event.key))
+                    # condicional para limitar 3 caracteres
+                    if len(name) <= 2:
+                        name += (pg.key.name(event.key))
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
 
+            # self.pantalla.blit(self.bg3, (0, 0))
+            self.pantalla.fill((11, 44, 94))
+
+            text_name = create_font(name, 23, (255, 255, 255))
+            SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, text_name.get_rect().centery + SPACEHEIGHT ))
+
+            tecla_pulsada = pg.key.get_pressed()
+            if tecla_pulsada[pg.K_RETURN]:
+                db.insert_score(name, self.puntosAcumulados)
+                enter_name = False
+
+            pg.display.flip()
