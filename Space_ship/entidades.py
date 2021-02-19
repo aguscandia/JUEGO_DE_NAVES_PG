@@ -298,7 +298,8 @@ class Game:
         self.pantalla = pg.display.set_mode(GAME_DIMENSIONS)
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
         self.bg2 = pg.image.load("recursos/imagenes/Portada-2.jpg")
-        pg.display.set_caption("Futuro space ship")
+        self.bg3 = pg.image.load("recursos/imagenes/Portada-3.jpg")
+        pg.display.set_caption("SPACE SHIP")
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
         self.vidas = 1
@@ -370,24 +371,24 @@ class Game:
                         self.pantalla.blit(self.bg, (0, 0))
                         self.pantalla.blit(self.explote.image, (self.nave.x, self.nave.y - self.nave.getHeight() / 2))
                         self.explote.update()
-                    if contador > 200:
+                    if contador > 100:
                         self.vidas -= 1
                         contador = 0
                         timeLeft = pg.time.get_ticks()
+                        ''' vidas y game over '''
                         if self.vidas > 0:
-                            while ((pg.time.get_ticks() - timeLeft) / 1000) > 5:
+                            while ((pg.time.get_ticks() - timeLeft) / 1000) < 2:
                                 self.pantalla.blit(self.bg, (0, 0))
                                 textoVidas = create_font("No Te Rindas!, Inténtalo De Nuevo", 32, (255, 255, 255))
                                 SURF.blit(textoVidas,((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                                 pg.display.flip()
                         else:
-                            while ((pg.time.get_ticks() - timeLeft) / 1000) > 5:
+                            while ((pg.time.get_ticks() - timeLeft) / 1000) < 5:
                                 self.pantalla.blit(self.bg, (0, 0))
                                 textoVidas = create_font("Game Over", 32, (255, 255, 255))
                                 SURF.blit(textoVidas,((GAME_DIMENSIONS[0] - textoVidas.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                                 pg.display.flip()
                             self.irAlaPortada()
-
 
                         self.nivel.restart()
                         self.nivel.stop_level = False
@@ -438,8 +439,6 @@ class Game:
                             self.nave = nave(10, 275, 0)
 
                     # cambiar meta de puntos por tiempo
-
-                    # game over
                     # tablas de puntaje
 
 
@@ -507,11 +506,27 @@ class Game:
                     pg.quit()
                     sys.exit()
 
-            #self.pantalla.blit(self.bg2, (0, 0))
-            self.pantalla.fill((11, 44, 94))
+            self.pantalla.blit(self.bg3, (0, 0))
+            # self.pantalla.fill((11, 44, 94))
 
-            textTitulo = create_font(" Instrucciones ", 50, (255, 255, 255))
-            SURF.blit(textTitulo, ((GAME_DIMENSIONS[0] - textTitulo.get_width()) / 2, GAME_DIMENSIONS[1] / 4))
+            textTitulo2 = create_font(" Instrucciones ", 50, (255, 255, 255))
+            SURF.blit(textTitulo2, ((GAME_DIMENSIONS[0] - textTitulo2.get_width()) / 2, GAME_DIMENSIONS[1] - textTitulo2.get_height()* 10))
+            textSalir = create_font(" (Pulse esc para volver) ", 23, (255, 255, 255))
+            SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * 0.8 ))
+            textParrafos = ["Año 3600 gracias a la tecnología alienígena descubierta en el 3590",
+                            "se ha fabricado una nave que podra viajar por los agujeros gusano.",
+                            "Basándonos en una serie de estudios que han podido detectar,",
+                            "que hay vida en el planeta Kepler 186f, la humanidad se podria mudar",
+                            "por eso se mando a una nave a buscar, zonas habitables en kepler",
+                            "ya que la tierra necesitará años para volver a tener oxigeno de nuevo.",
+                            "Tu mision es llegar al planeta, esquivar las lluvias de asteroides;",
+                            "deberas estacionar la nave en distintos puntos estelares",
+                            "para cargar de la energia solar de la enana naranja tipo K2,5V "]
+            spaceProduc = 1
+            for textParrafo in textParrafos:
+                spaceProduc += 0.5
+                textParrafoFont = create_font(textParrafo, 23, (255, 255, 255))
+                SURF.blit(textParrafoFont, ((GAME_DIMENSIONS[0] - textParrafoFont.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * spaceProduc))
 
             tecla_pulsada = pg.key.get_pressed()
             if tecla_pulsada[pg.K_ESCAPE]:
