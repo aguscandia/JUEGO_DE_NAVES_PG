@@ -36,13 +36,10 @@ class GameDB:
         try:
             cursor = self.conn.cursor()
             print("Successfully Connected to SQLite")
+            values = (name, score)
+            sqlite_insert_query = "INSERT INTO puntos (name, score)  VALUES (?, ?)"
 
-            sqlite_insert_query = """INSERT INTO puntos
-                                  (name, score) 
-                                   VALUES 
-                                  ("""+name+", "+str(score)+")"
-
-            count = cursor.execute(sqlite_insert_query)
+            count = cursor.execute(sqlite_insert_query, values)
             self.conn.commit()
             print("Record inserted successfully into puntos table ", cursor.rowcount)
             cursor.close()
@@ -54,8 +51,8 @@ class GameDB:
         try:
             cursor = self.conn.cursor()
             print("Connected to SQLite")
-
-            sqlite_select_query = """SELECT * FROM puntos ORDER BY score ASC"""
+            # mostrar de puntos de mayor a menor
+            sqlite_select_query = """SELECT * FROM puntos ORDER BY score DESC"""
             cursor.execute(sqlite_select_query)
             records = cursor.fetchall()
             print("Total rows are:  ", len(records))

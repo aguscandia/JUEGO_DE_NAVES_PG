@@ -1,3 +1,5 @@
+from curses.ascii import isalpha
+
 import pygame as pg
 from Space_ship import GAME_DIMENSIONS, gameDB, FPS
 
@@ -6,6 +8,7 @@ import sys
 pg.init()
 
 db = gameDB.GameDB('mysqlite.db')
+db.create_table()
 
 # fuente
 pg.font.init()
@@ -300,6 +303,7 @@ class Game:
         self.bg = pg.image.load("recursos/imagenes/fondo-800x600.jpg")
         self.bg2 = pg.image.load("recursos/imagenes/Portada-2.jpg")
         self.bg3 = pg.image.load("recursos/imagenes/Portada-3.jpg")
+        self.bg4 = pg.image.load("recursos/imagenes/Portada-4.jpg")
         pg.display.set_caption("SPACE SHIP")
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
@@ -422,6 +426,7 @@ class Game:
                             textLevelComplete = create_font(" Juego Completado! ", 32, (255, 255, 255))
                             SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                             pg.display.flip()
+                        self.puntosAcumulados += self.puntos
                           # ingreso del nombre
                         self.enter_name()
 
@@ -442,7 +447,7 @@ class Game:
 
                         tecla_pulsada = pg.key.get_pressed()
                         if tecla_pulsada[pg.K_RETURN]:
-                            self.puntosAcumulados = self.nivel.puntos
+                            self.puntosAcumulados += self.nivel.puntos
                             self.nivel = Nivel(self.nivel.get_numeroNivel() + 1, 30)
                             self.nave = nave(10, 275, 0)
 
@@ -501,7 +506,8 @@ class Game:
             elif tecla_pulsada[pg.K_UP]:
                 textPortada_s = 2
                 textInstrucciones_s = 1
-
+            elif tecla_pulsada[pg.K_SPACE]:
+                self.enter_name()
             pg.display.flip()
 
     def irAlasInstrucciones(self):
@@ -519,17 +525,21 @@ class Game:
 
             textTitulo2 = create_font(" Instrucciones ", 50, (255, 255, 255))
             SURF.blit(textTitulo2, ((GAME_DIMENSIONS[0] - textTitulo2.get_width()) / 2, GAME_DIMENSIONS[1] - textTitulo2.get_height()* 10))
-            textSalir = create_font(" (Pulse esc para volver) ", 23, (255, 255, 255))
-            SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * 0.8 ))
-            textParrafos = ["Año 3600 gracias a la tecnología alienígena descubierta en el 3590",
-                            "se ha fabricado una nave que podra viajar por los agujeros gusano.",
-                            "Basándonos en una serie de estudios que han podido detectar,",
-                            "que hay vida en el planeta Kepler 186f, la humanidad se podria mudar",
-                            "por eso se mando a una nave a buscar, zonas habitables en kepler",
-                            "ya que la tierra necesitará años para volver a tener oxigeno de nuevo.",
-                            "Tu mision es llegar al planeta, esquivar las lluvias de asteroides;",
-                            "deberas estacionar la nave en distintos puntos estelares",
-                            "para cargar de la energia solar de la enana naranja tipo K2,5V "]
+            textSalir = create_font(" (Pulse esc para volver) ", 18, (255, 255, 255))
+            SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * 8))
+            textParrafos = ["Año 3600,como el oxígeno se esta acabando en nuestra tierra" 
+                            "se empezo a utilizar la tecnología alienígena descubierta "
+                            "en el 3590", "se ha fabricado una nave que podra viajar por"
+                            "por el espacio utilizando los agujeros gusano."
+                            "Basándose en una serie de estudios se ha podido detectar,"
+                            "que hay vida en el planeta Kepler 186f, por ende la humanidad"
+                            " se podria mudar", "por eso se envió una nave a buscar, "
+                            "las zonas habitables de kepler", "ya que la tierra necesitará "
+                            "años para volver a tener oxigeno de nuevo.",
+                            "La mision es llegar al planeta, esquivar las lluvias de asteroides;",
+                            "estacionar la nave en distintos puntos estelares",
+                            "cargar energia solar de la enana naranja tipo K2,5V "
+                            "y conseguir las pruebas necesarias para traerlas de regreso"]
             spaceProduc = 1
             for textParrafo in textParrafos:
                 spaceProduc += 0.5
@@ -545,24 +555,53 @@ class Game:
     def enter_name(self):
         enter_name = True
         SPACEHEIGHT = 80  # indice para los espacios de texto
+        SPACEWIDTH = 150
         name = ''
+        scores = db.get_all_score()
         while enter_name:
             events = pg.event.get()
             for event in events:
                 if event.type == pg.KEYDOWN:
                     print(pg.key.name(event.key))
                     # condicional para limitar 3 caracteres
-                    if len(name) <= 2:
+                    if len(name) <= 2 and isalpha(pg.key.name(event.key)):
                         name += (pg.key.name(event.key))
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
 
-            # self.pantalla.blit(self.bg3, (0, 0))
-            self.pantalla.fill((11, 44, 94))
+            self.pantalla.blit(self.bg4, (0, 0))
+            # self.pantalla.fill((11, 44, 94))
+
+            titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 50, (255, 255, 255))
+            SURF.blit(titulo_tabla, ((GAME_DIMENSIONS[0] - titulo_tabla.get_width()) / 2, titulo_tabla.get_rect().centery))
 
             text_name = create_font(name, 23, (255, 255, 255))
             SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, text_name.get_rect().centery + SPACEHEIGHT ))
+
+            # tabla de puntajes
+
+            spaceproduct = 2
+            min = len(scores) if len(scores) < 10 else 10
+            titulo_puesto = create_font("Puesto", 30, (255, 255, 255))
+            SURF.blit(titulo_puesto,((GAME_DIMENSIONS[0] - titulo_puesto.get_width()) / 2 - SPACEWIDTH,
+                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+            titulo_nombre = create_font("Nombre", 30, (255, 255, 255))
+            SURF.blit(titulo_nombre, ((GAME_DIMENSIONS[0] - titulo_nombre.get_width()) / 2,
+                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+            titulo_score = create_font("Score", 30, (255, 255, 255))
+            SURF.blit(titulo_score, ((GAME_DIMENSIONS[0] - titulo_score.get_width()) / 2 + SPACEWIDTH,
+                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+            # tabla cenrada
+            for i in range(min):
+                spaceproduct += 0.5
+                puntaje_puesto = create_font(str(i + 1), 26, (255, 255, 255))
+                SURF.blit(puntaje_puesto, ((GAME_DIMENSIONS[0] - titulo_puesto.get_width()) / 2 - SPACEWIDTH + (titulo_puesto.get_width() - puntaje_puesto.get_width() ) / 2, text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+                puntaje_nombre = create_font(scores[i][1], 26, (255, 255, 255))
+                SURF.blit(puntaje_nombre, ((GAME_DIMENSIONS[0] - titulo_nombre.get_width()) / 2 + (titulo_nombre.get_width() - puntaje_nombre.get_width()) / 2, text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+                puntaje_score = create_font(str(scores[i][2]), 26,(255, 255, 255))
+                SURF.blit(puntaje_score, ((GAME_DIMENSIONS[0] - titulo_score.get_width()) / 2 + SPACEWIDTH + (titulo_score.get_width() - puntaje_score.get_width()) / 2, text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+
 
             tecla_pulsada = pg.key.get_pressed()
             if tecla_pulsada[pg.K_RETURN]:
