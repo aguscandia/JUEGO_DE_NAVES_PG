@@ -527,22 +527,22 @@ class Game:
             SURF.blit(textTitulo2, ((GAME_DIMENSIONS[0] - textTitulo2.get_width()) / 2, GAME_DIMENSIONS[1] - textTitulo2.get_height()* 10))
             textSalir = create_font(" (Pulse esc para volver) ", 18, (255, 255, 255))
             SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * 8))
-            textParrafos = ["Año 3600,como el oxígeno se esta acabando en nuestra tierra" 
-                            "se empezo a utilizar la tecnología alienígena descubierta "
-                            "en el 3590", "se ha fabricado una nave que podra viajar por"
-                            "por el espacio utilizando los agujeros gusano."
-                            "Basándose en una serie de estudios se ha podido detectar,"
-                            "que hay vida en el planeta Kepler 186f, por ende la humanidad"
-                            " se podria mudar", "por eso se envió una nave a buscar, "
-                            "las zonas habitables de kepler", "ya que la tierra necesitará "
+            textParrafos = ["Año 3600,como el oxígeno se esta acabando en nuestra tierra",
+                            "se empezo a utilizar la tecnología alienígena descubierta",
+                            "en el 3590, se ha fabricado una nave que podra viajar por",
+                            "por el espacio utilizando los agujeros gusano.",
+                            "Basándose en una serie de estudios se ha podido detectar,",
+                            "que hay vida en el planeta Kepler 186f, por ende la humanidad",
+                            " se podria mudar, por eso se envió una nave a buscar,",
+                            "las zonas habitables de kepler, ya que la tierra necesitará",
                             "años para volver a tener oxigeno de nuevo.",
                             "La mision es llegar al planeta, esquivar las lluvias de asteroides;",
                             "estacionar la nave en distintos puntos estelares",
-                            "cargar energia solar de la enana naranja tipo K2,5V "
+                            "cargar energia solar de la enana naranja tipo K2,5V",
                             "y conseguir las pruebas necesarias para traerlas de regreso"]
             spaceProduc = 1
             for textParrafo in textParrafos:
-                spaceProduc += 0.5
+                spaceProduc += 0.4 # espacio de interliniado
                 textParrafoFont = create_font(textParrafo, 23, (255, 255, 255))
                 SURF.blit(textParrafoFont, ((GAME_DIMENSIONS[0] - textParrafoFont.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * spaceProduc))
 
@@ -576,25 +576,30 @@ class Game:
             titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 50, (255, 255, 255))
             SURF.blit(titulo_tabla, ((GAME_DIMENSIONS[0] - titulo_tabla.get_width()) / 2, titulo_tabla.get_rect().centery))
 
-            text_name = create_font(name, 23, (255, 255, 255))
-            SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, text_name.get_rect().centery + SPACEHEIGHT ))
+            text_name = create_font(name, 30, (255, 255, 255))
+            # rectangulo para el ingreso de las iniciales
+            text_name_rect = text_name.get_rect()
+            SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT))
+            pg.draw.rect(self.pantalla, (255, 0, 0), ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT + 3, 46, 30), width=1 ) # witdth ancho de linea
+
 
             # tabla de puntajes
 
-            spaceproduct = 2
+            spaceproduct = 1.2
             min = len(scores) if len(scores) < 10 else 10
             titulo_puesto = create_font("Puesto", 30, (255, 255, 255))
             SURF.blit(titulo_puesto,((GAME_DIMENSIONS[0] - titulo_puesto.get_width()) / 2 - SPACEWIDTH,
-                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+                                     titulo_tabla.get_rect().centery + SPACEHEIGHT * spaceproduct))
             titulo_nombre = create_font("Nombre", 30, (255, 255, 255))
             SURF.blit(titulo_nombre, ((GAME_DIMENSIONS[0] - titulo_nombre.get_width()) / 2,
-                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+                                     titulo_tabla.get_rect().centery + SPACEHEIGHT * spaceproduct))
             titulo_score = create_font("Score", 30, (255, 255, 255))
             SURF.blit(titulo_score, ((GAME_DIMENSIONS[0] - titulo_score.get_width()) / 2 + SPACEWIDTH,
-                                     text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
+                                     titulo_tabla.get_rect().centery + SPACEHEIGHT * spaceproduct))
             # tabla cenrada
+            spaceproduct = 1.5  # indice de arranque
             for i in range(min):
-                spaceproduct += 0.5
+                spaceproduct += 0.5 #interlineado de la tabla
                 puntaje_puesto = create_font(str(i + 1), 26, (255, 255, 255))
                 SURF.blit(puntaje_puesto, ((GAME_DIMENSIONS[0] - titulo_puesto.get_width()) / 2 - SPACEWIDTH + (titulo_puesto.get_width() - puntaje_puesto.get_width() ) / 2, text_name.get_rect().centery + SPACEHEIGHT * spaceproduct))
                 puntaje_nombre = create_font(scores[i][1], 26, (255, 255, 255))
