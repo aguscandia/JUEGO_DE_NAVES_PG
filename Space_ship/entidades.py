@@ -469,8 +469,8 @@ class Game:
         pg.mixer.music.play()
         pg.mixer.music.set_volume(0.05)
         SPACEHEIGHT = 80  # indice para los espacios de texto
-        textPortada_s = 2
-        textInstrucciones_s = 1
+        selectOptions =[2, 1, 1]
+        currentSelection = 0
         while portada:
             events = pg.event.get()
             for event in events:
@@ -483,14 +483,17 @@ class Game:
 
             textTitulo = create_font(" SPACE SHIP ", 100, (255, 255, 255))
             SURF.blit(textTitulo, ((GAME_DIMENSIONS[0] - textTitulo.get_width()) / 2, GAME_DIMENSIONS[1] / 4))
-            textPortada = create_font(" Jugar ", textPortada_s * 16, (255, 255, 255))
+            textPortada = create_font(" Jugar ", selectOptions[0] * 16, (255, 255, 255))
             SURF.blit(textPortada, ((GAME_DIMENSIONS[0] - textPortada.get_width()) / 2, textTitulo.get_rect().centery + SPACEHEIGHT * 3))
-            textInstrucciones = create_font(" Instrucciones ", textInstrucciones_s * 16, (255, 255, 255))
+            textInstrucciones = create_font(" Instrucciones ", selectOptions[1] * 16, (255, 255, 255))
             SURF.blit(textInstrucciones, ((GAME_DIMENSIONS[0] - textInstrucciones.get_width()) / 2, textTitulo.get_rect().centery + SPACEHEIGHT * 3.5))
+            textScores = create_font("Tabla de puntaje", selectOptions[2] * 16, (255, 255, 255))
+            SURF.blit(textScores, ((GAME_DIMENSIONS[0] - textScores.get_width()) / 2,
+                                          textTitulo.get_rect().centery + SPACEHEIGHT * 4))
 
             tecla_pulsada = pg.key.get_pressed()
             if tecla_pulsada[pg.K_RETURN]:
-                if textPortada_s > textInstrucciones_s:
+                if selectOptions[0] > selectOptions[1]:
                     self.puntosAcumulados = 0
                     self.puntos = 0
                     self.vidas = 2
@@ -498,14 +501,20 @@ class Game:
                     self.nave = nave(10, 275, 0)
                     portada = False
                     pg.mixer.music.stop()
-                else:
+                elif selectOptions[1] > selectOptions[2]:
                     self.irAlasInstrucciones()
-            elif tecla_pulsada[pg.K_DOWN]:
-                textPortada_s = 1
-                textInstrucciones_s = 2
-            elif tecla_pulsada[pg.K_UP]:
-                textPortada_s = 2
-                textInstrucciones_s = 1
+                else:
+                    self.enter_name(withName = False)
+
+                    # selector de opciones "portada"
+            elif tecla_pulsada[pg.K_DOWN] and currentSelection < 2:
+                selectOptions[currentSelection] = 1
+                selectOptions[currentSelection + 1] = 2
+                currentSelection += 1
+            elif tecla_pulsada[pg.K_UP] and currentSelection > 0:
+                selectOptions[currentSelection] = 1
+                selectOptions[currentSelection - 1] = 2
+                currentSelection -= 1
             elif tecla_pulsada[pg.K_SPACE]:
                 self.enter_name()
             pg.display.flip()
@@ -526,14 +535,14 @@ class Game:
             textTitulo2 = create_font(" Instrucciones ", 50, (255, 255, 255))
             SURF.blit(textTitulo2, ((GAME_DIMENSIONS[0] - textTitulo2.get_width()) / 2, GAME_DIMENSIONS[1] - textTitulo2.get_height()* 10))
             textSalir = create_font(" (Pulse esc para volver) ", 18, (255, 255, 255))
-            SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * 8))
-            textParrafos = ["Año 3600,como el oxígeno se esta acabando en nuestra tierra",
+            SURF.blit(textSalir, ((GAME_DIMENSIONS[0] - textSalir.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT -18))
+            textParrafos = ["Año 3600, como el oxígeno se esta acabando en nuestra tierra",
                             "se empezo a utilizar la tecnología alienígena descubierta",
                             "en el 3590, se ha fabricado una nave que podra viajar por",
                             "por el espacio utilizando los agujeros gusano.",
                             "Basándose en una serie de estudios se ha podido detectar,",
                             "que hay vida en el planeta Kepler 186f, por ende la humanidad",
-                            " se podria mudar, por eso se envió una nave a buscar,",
+                            " se podria mudar, por eso se envió una nave a buscar",
                             "las zonas habitables de kepler, ya que la tierra necesitará",
                             "años para volver a tener oxigeno de nuevo.",
                             "La mision es llegar al planeta, esquivar las lluvias de asteroides;",
@@ -543,7 +552,7 @@ class Game:
             spaceProduc = 1
             for textParrafo in textParrafos:
                 spaceProduc += 0.4 # espacio de interliniado
-                textParrafoFont = create_font(textParrafo, 23, (255, 255, 255))
+                textParrafoFont = create_font(textParrafo, 25, (255, 255, 255))
                 SURF.blit(textParrafoFont, ((GAME_DIMENSIONS[0] - textParrafoFont.get_width()) / 2, textTitulo2.get_rect().centery + SPACEHEIGHT * spaceProduc))
 
             tecla_pulsada = pg.key.get_pressed()
@@ -551,8 +560,8 @@ class Game:
                 instrucciones = False
 
             pg.display.flip()
-
-    def enter_name(self):
+        # cuando llegue cierto puntaje
+    def enter_name(self, withName = True):
         enter_name = True
         SPACEHEIGHT = 80  # indice para los espacios de texto
         SPACEWIDTH = 150
@@ -561,7 +570,7 @@ class Game:
         while enter_name:
             events = pg.event.get()
             for event in events:
-                if event.type == pg.KEYDOWN:
+                if event.type == pg.KEYDOWN and withName:
                     print(pg.key.name(event.key))
                     # condicional para limitar 3 caracteres
                     if len(name) <= 2 and isalpha(pg.key.name(event.key)):
@@ -578,9 +587,10 @@ class Game:
 
             text_name = create_font(name, 30, (255, 255, 255))
             # rectangulo para el ingreso de las iniciales
-            text_name_rect = text_name.get_rect()
-            SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT))
-            pg.draw.rect(self.pantalla, (255, 0, 0), ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT + 3, 46, 30), width=1 ) # witdth ancho de linea
+            # text_name_rect = text_name.get_rect()
+            if withName:
+                SURF.blit(text_name, ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT))
+                pg.draw.rect(self.pantalla, (255, 255, 0), ((GAME_DIMENSIONS[0] - text_name.get_width()) / 2, SPACEHEIGHT + 3, 49, 30), width=1 ) # witdth ancho de linea
 
 
             # tabla de puntajes
