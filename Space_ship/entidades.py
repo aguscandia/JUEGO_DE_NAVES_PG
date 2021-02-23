@@ -19,6 +19,9 @@ def create_font(t, s=72, c=(255, 255, 0), b=False, i=False):
     text = font.render(t, True, c)
     return text
 
+# metodo de subir fuente con render para el titulo
+
+battlest = pg.font.Font("recursos/fuentes/BATTLEST.TTF", 90)
 
 GAME_OVER_FONT = create_font("GAME OVER")
 SURF = pg.display.set_mode(GAME_DIMENSIONS)
@@ -127,7 +130,7 @@ class Explote(pg.sprite.Sprite):
 
     def explote_sound(self):
         pg.mixer.init()
-        pg.mixer.music.load("recursos/audio/sonido-1.mp3")
+        pg.mixer.music.load("recursos/audio/sonido-1.ogg")
         pg.mixer.music.play()
         pg.mixer.music.set_volume(0.01)
 
@@ -295,7 +298,7 @@ class asteroide():
 class Game:
     def __init__(self):
         self.timeLeft = 0
-        self.numeroDeNiveles = 1
+        self.numeroDeNiveles = 2
         self.puntosAcumulados = 0
         self.planet1 = Planet()
         self.clock = pg.time.Clock()
@@ -307,7 +310,7 @@ class Game:
         pg.display.set_caption("SPACE SHIP")
         self.crash_nave = False
         self.nivel = Nivel(1, 10)
-        self.vidas = 1
+        self.vidas = 3
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600)
         self.nave = nave(10, 275, 0)
@@ -449,7 +452,7 @@ class Game:
                             self.irAlaPortada()
 
                     else:
-                        textLevelComplete = create_font(" Nivel " + str(self.nivel.nivel) + " Completado! Pulse Enter para continuar ",32, (255, 255, 255))
+                        textLevelComplete = create_font(" Nivel " + str(self.nivel.nivel) + " Completado! Enter para continuar ",32, (255, 255, 255))
                         SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
 
                         tecla_pulsada = pg.key.get_pressed()
@@ -471,7 +474,7 @@ class Game:
     def irAlaPortada(self):
         portada = True
         pg.mixer.init()
-        pg.mixer.music.load("recursos/audio/intro_.mp3")
+        pg.mixer.music.load("recursos/audio/intro_.ogg")
         pg.mixer.music.play()
         pg.mixer.music.set_volume(0.05)
         SPACEHEIGHT = 80  # indice para los espacios de texto
@@ -479,7 +482,7 @@ class Game:
         currentSelection = 0
         # retardo de cilos para el selector
         ciclos_tras_refresco = 0
-        retardo_anim = 15
+        retardo_anim = 16
 
         while portada:
             ciclos_tras_refresco += 1
@@ -493,7 +496,9 @@ class Game:
             self.pantalla.blit(self.bg2, (0, 0))
             #self.pantalla.fill((11, 44, 94))
 
-            textTitulo = create_font(" SPACE SHIP ", 100, (255, 255, 255))
+            textTeclaAcceso = create_font("(Presione las teclas de desplazamiento vertical y la barra espaciadora para acceder)", 20, (255, 255, 255))
+            SURF.blit(textTeclaAcceso, ((GAME_DIMENSIONS[0] - textTeclaAcceso.get_width()) / 2, GAME_DIMENSIONS[1] / 20))
+            textTitulo = battlest.render(" SPACE SHIP ", 1, (255, 255, 255))  # el 1 es antialias para difuminar bordes
             SURF.blit(textTitulo, ((GAME_DIMENSIONS[0] - textTitulo.get_width()) / 2, GAME_DIMENSIONS[1] / 4))
             textPortada = create_font(" Jugar ", selectOptions[0] * 16, (255, 255, 255))
             SURF.blit(textPortada, ((GAME_DIMENSIONS[0] - textPortada.get_width()) / 2, textTitulo.get_rect().centery + SPACEHEIGHT * 3))
@@ -595,9 +600,9 @@ class Game:
             # self.pantalla.fill((11, 44, 94))
             # condicional score
             if withName:
-                titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 50, (255, 255, 255))
+                titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 25, (255, 255, 255))
             else:
-                titulo_tabla = create_font("Pulsa (ESC) para salir", 50, (255, 255, 255))
+                titulo_tabla = create_font("Pulsa (ESC) para salir", 20, (255, 255, 255))
             SURF.blit(titulo_tabla, ((GAME_DIMENSIONS[0] - titulo_tabla.get_width()) / 2, titulo_tabla.get_rect().centery))
 
 
