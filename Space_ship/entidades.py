@@ -427,8 +427,14 @@ class Game:
                             SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                             pg.display.flip()
                         self.puntosAcumulados += self.puntos
-                          # ingreso del nombre
-                        self.enter_name()
+                        scores = db.get_all_score()  # obtener todos los puntos
+                        scorePosition = len(scores) if len(scores) < 10 else 10
+
+                        # ingreso de el nombre si esta dentro de los 10 mejores puntajes
+                        if scores[scorePosition - 1][2] < self.puntosAcumulados or len(scores) < 10:
+                            self.enter_name()
+                        else:
+                            self.enter_name(False)
 
                         tecla_pulsada = pg.key.get_pressed()
                         if tecla_pulsada[pg.K_RETURN]:
@@ -437,6 +443,7 @@ class Game:
                             self.vidas = 3
                             self.nivel = Nivel(1, 30)
                             self.nave = nave(10, 275, 0)
+                            self.irAlaPortada()
 
                         if ((pg.time.get_ticks() - self.timeLeft) / 1000) > 5:
                             self.irAlaPortada()
@@ -452,7 +459,6 @@ class Game:
                             self.nave = nave(10, 275, 0)
 
                     # cambiar meta de puntos por tiempo
-                    # tablas de puntaje
 
 
             SURF.blit(create_font("Nivel:" + str(self.nivel.nivel), 32, (255, 255, 255)),((GAME_DIMENSIONS[0] / 6) * 0, 0))
@@ -471,12 +477,18 @@ class Game:
         SPACEHEIGHT = 80  # indice para los espacios de texto
         selectOptions =[2, 1, 1]
         currentSelection = 0
+        # retardo de cilos para el selector
+        ciclos_tras_refresco = 0
+        retardo_anim = 15
+
         while portada:
+            ciclos_tras_refresco += 1
             events = pg.event.get()
             for event in events:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
+
 
             self.pantalla.blit(self.bg2, (0, 0))
             #self.pantalla.fill((11, 44, 94))
@@ -491,8 +503,9 @@ class Game:
             SURF.blit(textScores, ((GAME_DIMENSIONS[0] - textScores.get_width()) / 2,
                                           textTitulo.get_rect().centery + SPACEHEIGHT * 4))
 
+
             tecla_pulsada = pg.key.get_pressed()
-            if tecla_pulsada[pg.K_RETURN]:
+            if tecla_pulsada[pg.K_SPACE]:
                 if selectOptions[0] > selectOptions[1]:
                     self.puntosAcumulados = 0
                     self.puntos = 0
@@ -506,17 +519,16 @@ class Game:
                 else:
                     self.enter_name(withName = False)
 
-                    # selector de opciones "portada"
-            elif tecla_pulsada[pg.K_DOWN] and currentSelection < 2:
+                    # selector de opciones "portada "
+
+            elif tecla_pulsada[pg.K_DOWN] and currentSelection < 2 and ciclos_tras_refresco % retardo_anim == 0 :
                 selectOptions[currentSelection] = 1
                 selectOptions[currentSelection + 1] = 2
                 currentSelection += 1
-            elif tecla_pulsada[pg.K_UP] and currentSelection > 0:
+            elif tecla_pulsada[pg.K_UP] and currentSelection > 0 and ciclos_tras_refresco % retardo_anim == 0 :
                 selectOptions[currentSelection] = 1
                 selectOptions[currentSelection - 1] = 2
                 currentSelection -= 1
-            elif tecla_pulsada[pg.K_SPACE]:
-                self.enter_name()
             pg.display.flip()
 
     def irAlasInstrucciones(self):
@@ -581,9 +593,13 @@ class Game:
 
             self.pantalla.blit(self.bg4, (0, 0))
             # self.pantalla.fill((11, 44, 94))
-
-            titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 50, (255, 255, 255))
+            # condicional score
+            if withName:
+                titulo_tabla = create_font("Ingresa 3 iniciales y pulsa (Enter)", 50, (255, 255, 255))
+            else:
+                titulo_tabla = create_font("Pulsa (ESC) para salir", 50, (255, 255, 255))
             SURF.blit(titulo_tabla, ((GAME_DIMENSIONS[0] - titulo_tabla.get_width()) / 2, titulo_tabla.get_rect().centery))
+
 
             text_name = create_font(name, 30, (255, 255, 255))
             # rectangulo para el ingreso de las iniciales
@@ -619,8 +635,9 @@ class Game:
 
 
             tecla_pulsada = pg.key.get_pressed()
-            if tecla_pulsada[pg.K_RETURN]:
+            if tecla_pulsada[pg.K_RETURN] and withName:
                 db.insert_score(name, self.puntosAcumulados)
                 enter_name = False
-
+            if tecla_pulsada[pg.K_ESCAPE] and not withName:
+                enter_name = False
             pg.display.flip()

@@ -14,21 +14,24 @@ class GameDB:
     # metodo para crear la tabla
 
     def create_table(self):
-        try:
-            sqlite_create_table_query = '''CREATE TABLE puntos (
-                                             id INTEGER PRIMARY KEY,
-                                             name TEXT NOT NULL,
-                                             score INTEGER NOT NULL);'''
-            cursor = self.conn.cursor()
-            print("Successfully Connected to SQLite")
-            cursor.execute(sqlite_create_table_query)
-            self.conn.commit()
-            print("SQLite table created")
+        if not self.table_exist():
+            try:
+                sqlite_create_table_query = '''CREATE TABLE puntos (
+                                                 id INTEGER PRIMARY KEY,
+                                                 name TEXT NOT NULL,
+                                                 score INTEGER NOT NULL);'''
+                cursor = self.conn.cursor()
+                print("Successfully Connected to SQLite")
+                cursor.execute(sqlite_create_table_query)
+                self.conn.commit()
+                print("SQLite table created")
 
-            cursor.close()
+                cursor.close()
 
-        except sqlite3.Error as error:
-            print("Error while creating a sqlite table", error)
+            except sqlite3.Error as error:
+                print("Error while creating a sqlite table", error)
+        else:
+            print("Table exist")
 
         # metodo para insertar los puntos
 
