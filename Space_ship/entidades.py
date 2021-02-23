@@ -423,7 +423,7 @@ class Game:
                     if self.nivel.get_numeroNivel() >= self.numeroDeNiveles:
                         while ((pg.time.get_ticks() - self.timeLeft) / 1000) < 2:
                             self.pantalla.blit(self.bg, (0, 0))
-                            textLevelComplete = create_font(" Juego Completado! ", 32, (255, 255, 255))
+                            textLevelComplete = create_font(" Lo has logrado! ", 32, (255, 255, 255))
                             SURF.blit(textLevelComplete, ((GAME_DIMENSIONS[0] - textLevelComplete.get_width()) / 2, GAME_DIMENSIONS[1] / 2))
                             pg.display.flip()
                         self.puntosAcumulados += self.puntos
@@ -431,7 +431,7 @@ class Game:
                         scorePosition = len(scores) if len(scores) < 10 else 10
 
                         # ingreso de el nombre si esta dentro de los 10 mejores puntajes
-                        if scores[scorePosition - 1][2] < self.puntosAcumulados or len(scores) < 10:
+                        if len(scores) == 0 or scores[scorePosition - 1][2] < self.puntosAcumulados or len(scores) < 10:
                             self.enter_name()
                         else:
                             self.enter_name(False)
