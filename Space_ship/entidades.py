@@ -23,6 +23,8 @@ def create_font(t, s=72, c=(255, 255, 0), b=False, i=False):
 
 battlest = pg.font.Font("recursos/fuentes/BATTLEST.TTF", 90)
 
+# constantes
+VIDAS_DEL_JUEGO = 3
 GAME_OVER_FONT = create_font("GAME OVER")
 SURF = pg.display.set_mode(GAME_DIMENSIONS)
 
@@ -53,22 +55,23 @@ class Nivel:
         self.update_nivel()
         self.meta_nivel = m
         self.finalizando = False
+        self.timeleft = pg.time.get_ticks()
 
     def nivelSound(self):
-        self.pg.mixer.init()
-        self.pg.mixer.music.load("recursos/audio/nivel_.ogg")
-        self.pg.mixer.music.play() # el -1 es para reproducir bucle infinito
-        self.pg.mixer.music.set_volume(0.5)
+        pg.mixer.init()
+        pg.mixer.music.load("recursos/audio/nivel_.ogg")
+        pg.mixer.music.play(-1) # el -1 es para reproducir bucle infinito
+        pg.mixer.music.set_volume(0.5)
 
 
     def update_nivel(self):
-        for i in range(random.randint(2, 7)):
+        for i in range(random.randint(2 * self.nivel, 5 * self.nivel)):
             ax3 = Asteroidex3()
-            ax3.vx = random.randint(2, 15)
+            ax3.vx = random.randint(2 * self.nivel, 6 * self.nivel)
             self.aster.append(ax3)
 
         # for i in range(random.randint(2, 7)):
-        for i in range(1):
+        for i in range(1 * self.nivel):
             ax3 = asteroide()
             #   ax3.vx = random.randint(2, 15)
             self.bigAsters.append(ax3)
@@ -93,6 +96,7 @@ class Nivel:
         self.bigAsters = []
         self.aster = []
         self.update_nivel()
+        self.nivelSound()
 
     def get_numeroNivel(self):
         return self.nivel
@@ -319,8 +323,8 @@ class Game:
         self.bg4 = pg.image.load("recursos/imagenes/Portada-4.jpg")
         pg.display.set_caption("SPACE SHIP")
         self.crash_nave = False
-        self.nivel = Nivel(1, 10)
-        self.vidas = 3
+        self.nivel = Nivel(1, random.randint(10, 20)) # duracion de nivel tiempo aleatorio
+        self.vidas = VIDAS_DEL_JUEGO
         self.puntos = 0
         self.goalRect = pg.Rect(0, 0, 1, 600) # rectangulo para puntajes
         self.nave = nave(10, 275, 0)
@@ -330,6 +334,7 @@ class Game:
     def bucle_principal(self):
         game_over = False
         contador = 0
+        self.nivel.nivelSound() # instancia musica de nivel
 
         while not game_over:
             # Gestión de eventos
@@ -376,9 +381,11 @@ class Game:
                 if self.goalRect.collidelistall(allAsters):
                     self.puntos += 1
 
-                if self.puntos > self.nivel.meta_nivel:
+                # meta de nivel por tiempo no por puntos
+
+                if ((pg.time.get_ticks() - self.nivel.timeleft) / 1000) > self.nivel.meta_nivel :
                     self.nivel.finalizando = True
-                if self.puntos > self.nivel.meta_nivel and not self.nivel.tieneAsteroides():
+                if ((pg.time.get_ticks() - self.nivel.timeleft) / 1000) > self.nivel.meta_nivel and not self.nivel.tieneAsteroides():
                     self.nivel.stop_level = True
                     self.nivel.ending_level = True
                     self.nave.vy = 0
@@ -454,10 +461,11 @@ class Game:
                         if tecla_pulsada[pg.K_RETURN]:
                             self.puntosAcumulados = 0
                             self.puntos = 0
-                            self.vidas = 3
-                            self.nivel = Nivel(1, 30)
+                            self.vidas = VIDAS_DEL_JUEGO
+                            self.nivel = Nivel(1,random.randint(10, 20))
                             self.nave = nave(10, 275, 0)
                             self.irAlaPortada()
+                            self.nivel.nivelSound()
 
                         if ((pg.time.get_ticks() - self.timeLeft) / 1000) > 5:
                             self.irAlaPortada()
@@ -469,10 +477,11 @@ class Game:
                         tecla_pulsada = pg.key.get_pressed()
                         if tecla_pulsada[pg.K_RETURN]:
                             self.puntosAcumulados += self.nivel.puntos
-                            self.nivel = Nivel(self.nivel.get_numeroNivel() + 1, 30)
+                            self.nivel = Nivel(self.nivel.get_numeroNivel() + 1, random.randint(10 * self.nivel.get_numeroNivel(), 20 * self.nivel.get_numeroNivel() ))
                             self.nave = nave(10, 275, 0)
+                            self.nivel.nivelSound()
 
-                    # cambiar meta de puntos por tiempo
+
 
 
             SURF.blit(create_font("Nivel:" + str(self.nivel.nivel), 32, (255, 255, 255)),((GAME_DIMENSIONS[0] / 6) * 0, 0))
@@ -486,7 +495,7 @@ class Game:
         portada = True
         pg.mixer.init()
         pg.mixer.music.load("recursos/audio/intro_.ogg")
-        pg.mixer.music.play(-1)
+        pg.mixer.music.play(-1) # el -1 es para reproducir bucle infinito
         pg.mixer.music.set_volume(0.5)
         SPACEHEIGHT = 80  # indice para los espacios de texto
         selectOptions =[2, 1, 1]
@@ -525,7 +534,7 @@ class Game:
                 if selectOptions[0] > selectOptions[1]:
                     self.puntosAcumulados = 0
                     self.puntos = 0
-                    self.vidas = 2
+                    self.vidas = VIDAS_DEL_JUEGO
                     self.nivel = Nivel(1, 30)
                     self.nave = nave(10, 275, 0)
                     portada = False
