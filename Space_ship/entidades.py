@@ -54,6 +54,13 @@ class Nivel:
         self.meta_nivel = m
         self.finalizando = False
 
+    def nivelSound(self):
+        self.pg.mixer.init()
+        self.pg.mixer.music.load("recursos/audio/nivel_.ogg")
+        self.pg.mixer.music.play() # el -1 es para reproducir bucle infinito
+        self.pg.mixer.music.set_volume(0.5)
+
+
     def update_nivel(self):
         for i in range(random.randint(2, 7)):
             ax3 = Asteroidex3()
@@ -131,11 +138,10 @@ class Explote(pg.sprite.Sprite):
     def explote_sound(self):
         pg.mixer.init()
         pg.mixer.music.load("recursos/audio/sonido-1.ogg")
-        pg.mixer.music.play()
-        pg.mixer.music.set_volume(0.01)
+        pg.mixer.music.play() # el -1 es para reproducir bucle infinito
+        pg.mixer.music.set_volume(0.5)
 
 class nave:
-
     def __init__(self, x, y, vy):
         self.angle = 0
         self.vc = 5   # velocidad crucero
@@ -201,6 +207,10 @@ class nave:
             self.rect.left += self.vc
         if self.x == GAME_DIMENSIONS[0] - self.width and self.angle < 180: # hasta que siga girando vaya aumentando de a 1
             self.angle += 1
+        pg.mixer.init()
+        pg.mixer.music.load("recursos/audio/deedle.ogg")
+        pg.mixer.music.play()  # el -1 es para reproducir bucle infinito
+        pg.mixer.music.set_volume(0.5)
 
     def manejar_eventos(self):
         # metodo movimiento de nave con get pressed
@@ -312,7 +322,7 @@ class Game:
         self.nivel = Nivel(1, 10)
         self.vidas = 3
         self.puntos = 0
-        self.goalRect = pg.Rect(0, 0, 1, 600)
+        self.goalRect = pg.Rect(0, 0, 1, 600) # rectangulo para puntajes
         self.nave = nave(10, 275, 0)
         self.explote = Explote()
 
@@ -361,7 +371,8 @@ class Game:
                     self.crash_nave = True
                     allAsters = []
                 self.pantalla.blit(self.nave.image, (self.nave.x, self.nave.y))
-                # pg.draw.rect(self.pantalla,(255, 0, 0), self.goalRect) # control de puntos
+                #  controlar  cada asteroide al pasar por el eje x=0
+                #pg.draw.rect(self.pantalla,(255, 0, 0), self.goalRect)
                 if self.goalRect.collidelistall(allAsters):
                     self.puntos += 1
 
@@ -475,8 +486,8 @@ class Game:
         portada = True
         pg.mixer.init()
         pg.mixer.music.load("recursos/audio/intro_.ogg")
-        pg.mixer.music.play()
-        pg.mixer.music.set_volume(0.05)
+        pg.mixer.music.play(-1)
+        pg.mixer.music.set_volume(0.5)
         SPACEHEIGHT = 80  # indice para los espacios de texto
         selectOptions =[2, 1, 1]
         currentSelection = 0
