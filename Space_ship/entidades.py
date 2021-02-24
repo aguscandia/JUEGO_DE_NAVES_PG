@@ -500,7 +500,7 @@ class Game:
         SPACEHEIGHT = 80  # indice para los espacios de texto
         selectOptions =[2, 1, 1]
         currentSelection = 0
-        # retardo de cilos para el selector
+        # retardo de ciclos para el selector
         ciclos_tras_refresco = 0
         retardo_anim = 16
 
